@@ -34,35 +34,39 @@ RUN \
   else echo "Lockfile not found." && exit 1; \
   fi
 
-# Production image, copy all the files and run next
-FROM base AS runner
-WORKDIR /app
 
-ENV NODE_ENV=production
-# Uncomment the following line in case you want to disable telemetry during runtime.
-# ENV NEXT_TELEMETRY_DISABLED=1
+FROM httpd:2.4 AS runner
+COPY --from=builder /app/out /usr/local/apache2/htdocs/
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+  # Production image, copy all the files and run next
+# FROM base AS runner
+# WORKDIR /app
 
-COPY --from=builder /app/public ./public
+# ENV NODE_ENV=production
+# # Uncomment the following line in case you want to disable telemetry during runtime.
+# # ENV NEXT_TELEMETRY_DISABLED=1
 
-# Set the correct permission for prerender cache
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
+# RUN addgroup --system --gid 1001 nodejs
+# RUN adduser --system --uid 1001 nextjs
 
-# Automatically leverage output traces to reduce image size
-# https://nextjs.org/docs/advanced-features/output-file-tracing
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# COPY --from=builder /app/public ./public
 
-USER nextjs
+# # Set the correct permission for prerender cache
+# RUN mkdir .next
+# RUN chown nextjs:nodejs .next
 
-EXPOSE 3000
+# # Automatically leverage output traces to reduce image size
+# # https://nextjs.org/docs/advanced-features/output-file-tracing
+# COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+# COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-ENV PORT=3000
+# USER nextjs
 
-# server.js is created by next build from the standalone output
-# https://nextjs.org/docs/pages/api-reference/next-config-js/output
-ENV HOSTNAME="0.0.0.0"
-CMD ["node","/app/server.js"]
+# EXPOSE 3000
+
+# ENV PORT=3000
+
+# # server.js is created by next build from the standalone output
+# # https://nextjs.org/docs/pages/api-reference/next-config-js/output
+# ENV HOSTNAME="0.0.0.0"
+# CMD ["node","/app/server.js"]
